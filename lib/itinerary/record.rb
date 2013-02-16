@@ -283,6 +283,39 @@ module Itinerary
       TabFields.values.map { |v| self[v] || '' }.join("\t")
     end
 
+    def to_html(options={})
+      show_fields = options[:show] || @@fields.keys
+      hide_fields = options[:hide] || []
+      html = ::Builder::XmlMarkup.new
+      html.dl do
+        html.dt(self.name)
+        html.dd do
+          html.dl do
+            (show_fields - hide_fields).each do |key|
+              field = @@fields[key] or raise "Unknown field: #{key.inspect}"
+              name = field.name
+              value = self[field.key]
+              if value
+                case field.key
+                when :name
+                  # already shown
+                  next
+                when :geocoding
+                  name = 'Location'
+                  value = [city, state].compact.join(', ')
+                when :contacted, :declined, :visited
+                  value = self[key].strftime('%-d %b %Y')
+                end
+                html.dt(name)
+                html.dd(value.to_s)
+              end
+            end
+          end
+        end
+      end
+      html.target!
+    end
+
     def save!
       @path ||= make_path
       @path.dirname.mkpath unless @path.dirname.exist?

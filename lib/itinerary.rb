@@ -4,6 +4,7 @@ require 'pathname'
 require 'geocoder'
 require 'hashstruct'
 require 'haversine'
+require 'builder'
 
 require 'itinerary/version'
 require 'itinerary/record'
