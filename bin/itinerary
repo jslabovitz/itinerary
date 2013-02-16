@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+
+require 'itinerary'
+
+require 'itinerary/tool'
+
+require 'itinerary/tools/convert'
+require 'itinerary/tools/create'
+require 'itinerary/tools/find-dups'
+require 'itinerary/tools/geocode'
+require 'itinerary/tools/import'
+require 'itinerary/tools/list'
+require 'itinerary/tools/merge'
+require 'itinerary/tools/reorg'
+require 'itinerary/tools/scrape-briar'
+
+cmd = ARGV.shift
+
+tool_class = Itinerary::Tool.find_tool(cmd) or raise "Unknown command: #{cmd.inspect}"
+
+tool = tool_class.new(ARGV)
+tool.run
