@@ -132,7 +132,7 @@ module Itinerary
 
     def self.each(&block)
       if block_given?
-        DataDir.find do |path|
+        Itinerary.root.find do |path|
           if path.file? && path.basename.to_s[0] != '.'
             yield(load(path))
           end
@@ -225,7 +225,7 @@ module Itinerary
     end
 
     def make_path
-      path = DataDir.expand_path.realpath
+      path = Itinerary.root.dup
       if geocoded?
         path += string_to_key(country) if country
         path += string_to_key(state) if state

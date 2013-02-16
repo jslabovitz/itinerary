@@ -14,6 +14,16 @@ require 'itinerary/tools/merge'
 require 'itinerary/tools/reorg'
 require 'itinerary/tools/scrape-briar'
 
+while ARGV.first =~ /^-(\w+)/
+  ARGV.shift
+  case $1
+  when 'd'
+    Itinerary.root = ARGV.shift
+  else
+    raise "Unknown flag: #{ARGV.inspect}"
+  end
+end
+
 cmd = ARGV.shift
 
 tool_class = Itinerary::Tool.find_tool(cmd) or raise "Unknown command: #{cmd.inspect}"

@@ -11,6 +11,12 @@ require 'itinerary/record'
 
 module Itinerary
 
-  DataDir ||= Pathname.new(ENV['DATA_DIR'] || 'entries')
+  def self.root
+    @@root
+  end
+
+  def self.root=(root)
+    @@root = Pathname.new(root).expand_path
+  end
 
 end

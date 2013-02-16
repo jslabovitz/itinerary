@@ -17,7 +17,7 @@ module Itinerary
             old_path = rec.path
             rec.path = rec.make_path
             rec.save!
-            (DataDir + old_path).unlink
+            (Itinerary.root + old_path).unlink
             ;;puts "Moved #{old_path} => #{rec.path}"
           end
         end

@@ -10,7 +10,7 @@ module Itinerary
       end
 
       def run
-        path = (DataDir + 'unknown/untitled').expand_path
+        path = (Itinerary.root + 'unknown/untitled').expand_path
 
         rec = Record.new(
           :path => path,
