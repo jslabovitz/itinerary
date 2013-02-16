@@ -286,28 +286,30 @@ module Itinerary
     def to_html(options={})
       show_fields = options[:show] || @@fields.keys
       hide_fields = options[:hide] || []
-      html = ::Builder::XmlMarkup.new
+      html = Builder::XmlMarkup.new
+      html.h2(self.name)
       html.dl do
-        html.dt(self.name)
-        html.dd do
-          html.dl do
-            (show_fields - hide_fields).each do |key|
-              field = @@fields[key] or raise "Unknown field: #{key.inspect}"
-              name = field.name
-              value = self[field.key]
-              if value
-                case field.key
-                when :name
-                  # already shown
-                  next
-                when :geocoding
-                  name = 'Location'
-                  value = [city, state].compact.join(', ')
-                when :contacted, :declined, :visited
-                  value = self[key].strftime('%-d %b %Y')
-                end
-                html.dt(name)
-                html.dd(value.to_s)
+        (show_fields - hide_fields).each do |key|
+          field = @@fields[key] or raise "Unknown field: #{key.inspect}"
+          name = field.name
+          value = self[field.key]
+          if value
+            case field.key
+            when :geocoding
+              name = 'Location'
+              value = [city, state].compact.join(', ')
+            when :contacted, :declined, :visited
+              value = self[key].strftime('%-d %b %Y')
+            when :uri
+              name = 'Website'
+              value = URI.parse(uri.split(/\s+/).first) if value.kind_of?(String)
+            end
+            html.dt(name)
+            html.dd do
+              if value.kind_of?(URI)
+                html.a(value.to_s, :href => value.to_s)
+              else
+                html.text!(value)
               end
             end
           end
