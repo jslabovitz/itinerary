@@ -286,32 +286,53 @@ module Itinerary
     def to_html(options={})
       show_fields = options[:show] || @@fields.keys
       hide_fields = options[:hide] || []
+      use_dl = options[:use_dl]
+      data = {}
+      (show_fields - hide_fields).each do |key|
+        field = @@fields[key] or raise "Unknown field: #{key.inspect}"
+        field_name = field.name
+        value = self[field.key]
+        if value
+          case field.key
+          when :geocoding
+            field_name = 'Location'
+            value = [city, state].compact.join(', ')
+          when :contacted, :declined, :visited
+            value = self[key].strftime('%-d %b %Y')
+          when :description
+            html = Builder::XmlMarkup.new
+            html.i(value)
+            value = html
+          when :uri
+            field_name = 'Website'
+            value = URI.parse(uri.split(/\s+/).first) if value.kind_of?(String)
+          end
+          html = Builder::XmlMarkup.new
+          case value
+          when URI
+            html.a(value.to_s, :href => value.to_s)
+          when Builder::XmlMarkup
+            html << value
+          else
+            html.text!(value)
+          end
+          data[field_name] = html
+        end
+      end
       html = Builder::XmlMarkup.new
       html.h2(self.name)
-      html.dl do
-        (show_fields - hide_fields).each do |key|
-          field = @@fields[key] or raise "Unknown field: #{key.inspect}"
-          name = field.name
-          value = self[field.key]
-          if value
-            case field.key
-            when :geocoding
-              name = 'Location'
-              value = [city, state].compact.join(', ')
-            when :contacted, :declined, :visited
-              value = self[key].strftime('%-d %b %Y')
-            when :uri
-              name = 'Website'
-              value = URI.parse(uri.split(/\s+/).first) if value.kind_of?(String)
-            end
-            html.dt(name)
-            html.dd do
-              if value.kind_of?(URI)
-                html.a(value.to_s, :href => value.to_s)
-              else
-                html.text!(value)
-              end
-            end
+      if use_dl
+        html.dl do
+          data.each do |key, value|
+            html.dt(key)
+            html.dd << value
+          end
+        end
+      else
+        data.each do |key, value|
+          html.p do
+            html.b("#{key}: ")
+            html << value
           end
         end
       end
