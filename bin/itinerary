@@ -7,26 +7,29 @@ require 'itinerary/tool'
 require 'itinerary/tools/convert'
 require 'itinerary/tools/create'
 require 'itinerary/tools/find-dups'
-require 'itinerary/tools/geocode'
 require 'itinerary/tools/import'
 require 'itinerary/tools/list'
-require 'itinerary/tools/merge'
-require 'itinerary/tools/reorg'
 require 'itinerary/tools/scrape-briar'
+
+root = nil
 
 while ARGV.first =~ /^-(\w+)/
   ARGV.shift
   case $1
   when 'd'
-    Itinerary.root = ARGV.shift
+    root = ARGV.shift
   else
     raise "Unknown flag: #{ARGV.inspect}"
   end
 end
 
-cmd = ARGV.shift
+raise "Must specify root" unless root
 
-tool_class = Itinerary::Tool.find_tool(cmd) or raise "Unknown command: #{cmd.inspect}"
-
-tool = tool_class.new(ARGV)
+itinerary = Itinerary.new(:root => root)
+cmd = ARGV.shift or raise "Command not specified"
+tool = itinerary.make_tool(cmd, ARGV) or raise "Unknown command: #{cmd.inspect}"
 tool.run
+
+at_exit do
+  itinerary.cleanup
+end

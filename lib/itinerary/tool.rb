@@ -1,5 +1,4 @@
-module Itinerary
-
+class Itinerary
   class Tool
 
     def self.inherited(subclass)
@@ -15,10 +14,10 @@ module Itinerary
       tool_class = @@tools.find { |t| t.name == cmd }
     end
 
-    def initialize(args)
-      parse(args)
+    def initialize(itinerary, args)
+      @itinerary = itinerary
+      parse(args) if respond_to?(:parse)
     end
 
   end
-
 end

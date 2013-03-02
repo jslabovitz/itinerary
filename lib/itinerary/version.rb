@@ -1,4 +1,4 @@
-module Itinerary
+class Itinerary
 
   VERSION = '0.0.1'
 

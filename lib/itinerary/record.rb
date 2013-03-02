@@ -1,4 +1,4 @@
-module Itinerary
+class Itinerary
 
   class Record < HashStruct
 
@@ -20,66 +20,44 @@ module Itinerary
 
     @@fields = {}
 
-    def self.field(key, options={})
+    def self.define_field(key, options={})
       @@fields[key] = Field.new(key, options)
+    end
+
+    def self.field(key)
+      @@fields[key]
+    end
+
+    def self.fields
+      @@fields
+    end
+
+    def self.field_keys
+      @@fields.keys
     end
 
     attr_accessor :path
 
-    field :person, type: String, name: 'Person'
-    field :organization, type: String, name: 'Organization'
-    field :address, type: String, name: 'Address'
-    field :geocoding, type: Object, name: 'Geocoding'
-    field :email, type: String, name: 'Email'
-    field :phone, type: String, name: 'Phone'
-    field :uri, type: URI, name: 'URL'
-    field :description, type: String, name: 'Description'
-    field :notes, type: String, name: 'Notes'
-    field :visited, type: Date, name: 'Visited'
-    field :contacted, type: Date, name: 'Contacted'
-    field :declined, type: Date, name: 'Declined'
-    field :ref, type: String, name: 'Reference'
-    field :group, type: String, name: 'Group'
-
-    TabFields = {
-      'Name' => :name,
-      'Organization' => :organization,
-      'Person' => :person,
-      'Address' => :address,
-      'Latitude' => :latitude,
-      'Longitude' => :longitude,
-      'Email' => :email,
-      'Phone' => :phone,
-      'URL' => :uri,
-      'Description' => :description,
-      'Group' => :group,
-    }
+    define_field :person, type: String, name: 'Person'
+    define_field :organization, type: String, name: 'Organization'
+    define_field :address, type: String, name: 'Address'
+    define_field :geocoding, type: Object, name: 'Geocoding'
+    define_field :email, type: String, name: 'Email'
+    define_field :phone, type: String, name: 'Phone'
+    define_field :uri, type: URI, name: 'URL'
+    define_field :description, type: String, name: 'Description'
+    define_field :ref, type: String, name: 'Reference'
+    define_field :group, type: String, name: 'Group'
+    define_field :visited, type: Date, name: 'Visited'
+    define_field :contacted, type: Date, name: 'Contacted'
+    define_field :declined, type: Date, name: 'Declined'
+    define_field :notes, type: String, name: 'Notes'
 
     MaxFieldNameLength = @@fields.map { |k, f| f.name.length }.max
 
-    def self.export(output, mode=:text)
-      case output
-      when String
-        output = Pathname.new(output).open('w')
-      when Pathname
-        output = output.open('w')
-      when IO
-        # nothing
-      else
-        raise "Can't write output #{output.inspect}"
-      end
-      lines = case mode
-      when :text
-        each.map { |r| r.to_text }
-      when :tab
-        tab_header + each.map { |r| r.to_tab }
-      end.join("\n")
-      output.write(lines)
-    end
-
-    def self.load(path)
+    def self.load(path, options={})
       io = path.open
-      rec = new(:path => path.expand_path.realpath)
+      rec = new(:path => path)
       last_key = nil
       while !io.eof? && (line = io.readline) do
         case line.chomp
@@ -122,53 +100,10 @@ module Itinerary
       rec
     end
 
-    def self.tab_header
-      TabFields.keys.join("\t")
-    end
-
-    def self.all
-      each.to_a
-    end
-
-    def self.each(&block)
-      if block_given?
-        Itinerary.root.find do |path|
-          if path.file? && path.basename.to_s[0] != '.'
-            yield(load(path))
-          end
-        end
-      else
-        Enumerator.new(self, :each)
-      end
-    end
-
-    def self.near(coords, radius)
-      matches = {}
-      each do |rec|
-        if rec.geocoded?
-          dist = Haversine.distance(*coords, rec.latitude, rec.longitude).to_miles
-          if dist <= radius
-            matches[dist] ||= []
-            matches[dist] << rec
-          end
-        end
-      end
-      matches
-    end
-
-    # def self.[](path)
-    #   each { |r| return r if r.path == path }
-    #   nil
-    # end
-
     ###
 
     def name
       organization || person
-    end
-
-    def id
-      path.basename
     end
 
     def city
@@ -191,6 +126,10 @@ module Itinerary
       geocoding[:longitude] if geocoded?
     end
 
+    def coordinates
+      [latitude, longitude] if geocoded?
+    end
+
     def geocoded?
       !geocoding.nil?
     end
@@ -211,8 +150,20 @@ module Itinerary
       end
     end
 
-    def kml_coordinates
-      [longitude, latitude, 0].join(',')
+    def near(coords, radius)
+      if geocoded? && (distance = Haversine.distance(*coords, latitude, longitude).to_miles) <= radius
+        distance
+      else
+        nil
+      end
+    end
+
+    def visited?
+      visited && visited < DateTime.now
+    end
+
+    def to_visit?
+      visited && visited >= DateTime.now
     end
 
     def string_to_key(str)
@@ -224,14 +175,11 @@ module Itinerary
       key
     end
 
-    def make_path
-      path = Itinerary.root.dup
-      if geocoded?
-        path += string_to_key(country) if country
-        path += string_to_key(state) if state
-      else
-        path += 'unknown'
-      end
+    def make_path(root)
+      path = root.dup
+      raise "Not geocoded" unless geocoded?
+      path += string_to_key(country) if country
+      path += string_to_key(state) if state
       raise "Can't make key from empty name" unless name
       key = string_to_key(name)
       i = 1
@@ -263,49 +211,77 @@ module Itinerary
       false
     end
 
-    def to_text
+    def to_text(options={})
       t = StringIO.new
-      @@fields.values.map do |f|
-        next if f.key == :notes
-        value = self[f.key] or next
+      field_keys = options[:field_keys] || @@fields.keys
+      field_keys.map { |k| @@fields[k] }.each do |field|
+        next if field.key == :notes
+        value = self[field.key] or next
         if value =~ /\n/
           value = "\n" + value.gsub(/^/, "\t")
         end
-        t.puts "%-#{MaxFieldNameLength + 1}.#{MaxFieldNameLength + 1}s %s" % [f.name + ':', value]
+        t.puts "%-#{MaxFieldNameLength + 1}.#{MaxFieldNameLength + 1}s %s" % [field.name + ':', value]
       end
       t.puts
-      t.puts notes if notes
+      t.puts notes if notes && field_keys.include?(:notes)
       t.rewind
       t.read
     end
 
-    def to_tab
-      TabFields.values.map { |v| self[v] || '' }.join("\t")
+    def to_tab(options={})
+      field_keys = options[:field_keys] || self.field_keys
+      field_keys.map { |k| @@fields[k] }.map do |field|
+        value = self[field.key] || ''
+        if value =~ /\n/
+          value = value.gsub(/\n+/, ' | ')
+        end
+        value
+      end.join("\t")
     end
 
     def to_html(options={})
-      show_fields = options[:show] || @@fields.keys
-      hide_fields = options[:hide] || []
       use_dl = options[:use_dl]
-      data = {}
-      (show_fields - hide_fields).each do |key|
+      fields_html = fields_to_html(options[:field_keys] || self.field_keys)
+      html = Builder::XmlMarkup.new
+      html.h2(name)
+      if use_dl
+        html.dl do
+          fields_html.each do |display_name, h|
+            html.dt(display_name)
+            html.dd << h
+          end
+        end
+      else
+        fields_html.each do |display_name, h|
+          html.p do
+            html.b("#{display_name}: ")
+            html << h
+          end
+        end
+      end
+      html.target!
+    end
+
+    def fields_to_html(field_keys)
+      fields_html = {}
+      field_keys.each do |key|
         field = @@fields[key] or raise "Unknown field: #{key.inspect}"
-        field_name = field.name
-        value = self[field.key]
-        if value
+        display_name = field.name
+        if (value = self[field.key])
           case field.key
           when :geocoding
-            field_name = 'Location'
+            display_name = 'Location'
             value = [city, state].compact.join(', ')
           when :contacted, :declined, :visited
-            value = self[key].strftime('%-d %b %Y')
+            value = value.strftime('%-d %b %Y')
           when :description
             html = Builder::XmlMarkup.new
             html.i(value)
             value = html
           when :uri
-            field_name = 'Website'
-            value = URI.parse(uri.split(/\s+/).first) if value.kind_of?(String)
+            display_name = 'Website'
+            #FIXME: anything beyond first URI is ignored -- make into list of links
+            value = URI.parse(value.split(/\s+/).first) if value.kind_of?(String)
           end
           html = Builder::XmlMarkup.new
           case value
@@ -316,34 +292,16 @@ module Itinerary
           else
             html.text!(value)
           end
-          data[field_name] = html
+          fields_html[display_name] = html.target!
         end
       end
-      html = Builder::XmlMarkup.new
-      html.h2(self.name)
-      if use_dl
-        html.dl do
-          data.each do |key, value|
-            html.dt(key)
-            html.dd << value
-          end
-        end
-      else
-        data.each do |key, value|
-          html.p do
-            html.b("#{key}: ")
-            html << value
-          end
-        end
-      end
-      html.target!
+      fields_html
     end
 
     def save!
-      @path ||= make_path
+      raise "Record has no path" unless @path
       @path.dirname.mkpath unless @path.dirname.exist?
       @path.open('w') { |io| io.write(to_text) }
-      ;;puts "Saved to #{@path}"
     end
 
     def edit(options={})
@@ -354,7 +312,23 @@ module Itinerary
     end
 
     def open_in_editor_link
-      URI.parse("subl://open/?url=file://#{URI.escape(@path)}")
+      URI.parse("subl://open/?url=file://#{URI.escape(full_path)}")
+    end
+
+    def print_diff(other)
+      (self.keys + other.keys).sort.uniq.each do |key|
+        if self[key] != other[key]
+          puts "\t" + "#{key}:"
+          if self[key] && !other[key]
+            puts "\t\t" + "- #{self[key].inspect}"
+          elsif !self[key] && other[key]
+            puts "\t\t" + "+ #{other[key].inspect}"
+          elsif self[key] != other[key]
+            puts "\t\t" + "< #{self[key].inspect}"
+            puts "\t\t" + "> #{other[key].inspect}"
+          end
+        end
+      end
     end
 
   end
