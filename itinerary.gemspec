@@ -16,12 +16,13 @@ Gem::Specification.new do |gem|
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
-  gem.require_paths = ["lib"]
+  gem.require_paths = ['lib']
 
   gem.add_development_dependency 'bundler'
   gem.add_development_dependency 'rake'
 
   gem.add_runtime_dependency 'builder'
+  gem.add_runtime_dependency 'daybreak', '0.2.4'
   gem.add_runtime_dependency 'faraday'
   gem.add_runtime_dependency 'faraday_middleware'
   gem.add_runtime_dependency 'geocoder'
