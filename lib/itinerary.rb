@@ -128,6 +128,11 @@ class Itinerary
           matched.select! do |rec|
             value.find { |v| rec.method("#{v}?").call }
           end
+        when :entries
+          values = value.split(',').map { |v| v[0] == '/' ? Pathname.new(v) : v }
+          matched.select! do |rec|
+            values.find { |v| rec.match(v, self) }
+          end
         else
           raise "Unknown field: #{key.inspect}" unless Record.field(key) || Record.instance_methods.include?(key)
           matched.select! { |r| r[key] == value }
@@ -149,8 +154,16 @@ class Itinerary
     matches
   end
 
-  def [](path)
-    @entries.find { |r| r.path.relative_path_from(entries_path).to_s == path }
+  def find(query)
+    @entries.find { |r| r.match(query, self) }
+  end
+
+  def select(query)
+    @entries.select { |r| r.match(query, self) }
+  end
+
+  def [](query)
+    find(query)
   end
 
   def parse_params(params)
