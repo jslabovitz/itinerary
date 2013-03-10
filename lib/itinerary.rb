@@ -150,7 +150,7 @@ class Itinerary
   end
 
   def [](path)
-    @entries.find { |r| r.path == path }
+    @entries.find { |r| r.path.relative_path_from(entries_path).to_s == path }
   end
 
   def parse_params(params)
