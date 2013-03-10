@@ -316,16 +316,21 @@ class Itinerary
     end
 
     def print_diff(other)
-      (self.keys + other.keys).sort.uniq.each do |key|
-        if self[key] != other[key]
-          puts "\t" + "#{key}:"
-          if self[key] && !other[key]
-            puts "\t\t" + "- #{self[key].inspect}"
-          elsif !self[key] && other[key]
-            puts "\t\t" + "+ #{other[key].inspect}"
-          elsif self[key] != other[key]
-            puts "\t\t" + "< #{self[key].inspect}"
-            puts "\t\t" + "> #{other[key].inspect}"
+      if self != other
+        puts
+        puts "< #{self.path}"
+        puts "> #{other.path}"
+        (self.keys + other.keys).sort.uniq.each do |key|
+          if self[key] != other[key]
+            puts "\t" + "#{key}:"
+            if self[key] && !other[key]
+              puts "\t\t" + "- #{self[key].inspect}"
+            elsif !self[key] && other[key]
+              puts "\t\t" + "+ #{other[key].inspect}"
+            elsif self[key] != other[key]
+              puts "\t\t" + "< #{self[key].inspect}"
+              puts "\t\t" + "> #{other[key].inspect}"
+            end
           end
         end
       end
