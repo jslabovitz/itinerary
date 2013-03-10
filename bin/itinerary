@@ -6,6 +6,7 @@ require 'itinerary/tool'
 
 require 'itinerary/tools/convert'
 require 'itinerary/tools/create'
+require 'itinerary/tools/diff'
 require 'itinerary/tools/find-dups'
 require 'itinerary/tools/import'
 require 'itinerary/tools/list'
