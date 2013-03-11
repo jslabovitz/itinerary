@@ -7,29 +7,28 @@ class Itinerary
 
     def parse(args)
       @view_class = View::Text
+      @params = {}
       while args.first =~ /^-(\w+)$/
         args.shift
-        @view_class = case $1
+        case $1
         when 't'
-          View::Tab
+          @view_class = View::Tab
         when 'h'
-          View::HTML
+          @view_class = View::HTML
         when 'k'
-          View::KML
+          @view_class = View::KML
+        when 'f'
+          key, value = args.shift.split('=', 2)
+          @params[key] = value
         end
       end
-      params = Hash[
-        args.map do |arg|
-          key, value = *arg.split('=', 2)
-          [key.to_sym, value]
-        end
-      ]
-      @filters, @options = @itinerary.parse_params(params)
+      @params[:entries] = args.join(',') unless args.empty?
     end
 
     def run
-      view = @view_class.new(@itinerary, @options)
-      print view.render(@itinerary.entries(@filters))
+      filters, options = @itinerary.parse_params(@params)
+      view = @view_class.new(@itinerary, options)
+      print view.render(@itinerary.entries(filters))
     end
 
   end
