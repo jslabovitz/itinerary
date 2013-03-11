@@ -166,6 +166,18 @@ class Itinerary
       visited && visited >= DateTime.now
     end
 
+    def match(query, itinerary)
+      case query
+      when Pathname
+        query == path
+      when String
+        rpath = path.relative_path_from(itinerary.entries_path).to_s
+        File.fnmatch(query, rpath)
+      else
+        raise "Don't know how to query on #{query.inspect}"
+      end
+    end
+
     def string_to_key(str)
       key = str.dup
       key.downcase!
@@ -181,16 +193,7 @@ class Itinerary
       path += string_to_key(country) if country
       path += string_to_key(state) if state
       raise "Can't make key from empty name" unless name
-      key = string_to_key(name)
-      i = 1
-      p = nil
-      loop do
-        p = key.dup
-        p += i.to_s if i > 1
-        break unless (path + p).exist?
-        i += 1
-      end
-      path += p
+      path += string_to_key(name)
       path
     end
 
