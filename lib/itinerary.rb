@@ -125,8 +125,10 @@ class Itinerary
         when :radius
           # ignored here -- used above
         when :flags
-          matched.select! do |rec|
-            value.find { |v| rec.method("#{v}?").call }
+          matched.reject! do |rec|
+            value.find do |f, v|
+              rec.method("#{f}?").call != v
+            end
           end
         when :entries
           values = value.split(',').map { |v| v[0] == '/' ? Pathname.new(v) : v }
@@ -176,7 +178,12 @@ class Itinerary
       when :radius
         filters.radius = value.to_f
       when :flags
-        filters.flags = value.split(',').map { |f| f.to_sym }
+        filters.flags = Hash[
+          value.split(',').map do |v|
+            v =~ /^(!?)(\w+)$/ or raise "Invalid flag specification: #{v.inspect}"
+            [$2.to_sym, ($1 != '!')]
+          end
+        ]
       when :show_fields
         options.show_fields = value.split(',').map { |f| f.to_sym }
       when :hide_fields
