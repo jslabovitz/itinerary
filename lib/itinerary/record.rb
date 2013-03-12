@@ -159,11 +159,19 @@ class Itinerary
     end
 
     def visited?
-      visited && visited < DateTime.now
+      !visited.nil? && visited < DateTime.now
     end
 
     def to_visit?
-      visited && visited >= DateTime.now
+      !visited.nil? && visited >= DateTime.now
+    end
+
+    def contacted?
+      !contacted.nil?
+    end
+
+    def declined?
+      !declined.nil?
     end
 
     def match(query, itinerary)
