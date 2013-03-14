@@ -22,7 +22,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rake'
 
   gem.add_runtime_dependency 'builder'
-  gem.add_runtime_dependency 'daybreak', '0.2.4'
+  gem.add_runtime_dependency 'daybreak'
   gem.add_runtime_dependency 'faraday'
   gem.add_runtime_dependency 'faraday_middleware'
   gem.add_runtime_dependency 'geocoder'
