@@ -224,17 +224,18 @@ class Itinerary
 
     def to_text(options={})
       t = StringIO.new
-      field_keys = options[:field_keys] || @@fields.keys
-      field_keys.map { |k| @@fields[k] }.each do |field|
-        next if field.key == :notes
-        value = self[field.key] or next
+      keys = options[:field_keys] || @@fields.keys
+      keys.each do |key|
+        next if key == :notes
+        value = self[key] or next
         if value =~ /\n/
           value = "\n" + value.gsub(/^/, "\t")
         end
-        t.puts "%-#{MaxFieldNameLength + 1}.#{MaxFieldNameLength + 1}s %s" % [field.name + ':', value]
+        field = @@fields[key]
+        t.puts "%-#{MaxFieldNameLength + 1}.#{MaxFieldNameLength + 1}s %s" % [(field ? field.name : key.to_s.capitalize) + ':', value]
       end
       t.puts
-      t.puts notes if notes && field_keys.include?(:notes)
+      t.puts notes if notes && keys.include?(:notes)
       t.rewind
       t.read
     end
