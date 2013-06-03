@@ -28,7 +28,7 @@ class Itinerary
     @name = options[:name]
     @root = options[:root] or raise "Must specify root"
     @root = Pathname.new(@root).expand_path
-    @geocoding_cache_path = options[:geocoding_cache] || '.geocoding-cache'
+    @geocoding_cache_path = @root + (options[:geocoding_cache] || '.geocoding-cache')
     setup_geocoding_cache
     @entries = []
     read_entries
