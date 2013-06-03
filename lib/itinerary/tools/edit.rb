@@ -18,11 +18,11 @@ class Itinerary
           warn "Unchanged"
           next
         end
-        rec.print_diff(old_rec)
         unless rec.geocoded?
           rec.geocode or raise "Failed to geocode #{rec.address.inspect} (entry left in #{rec.path})"
           rec.save!
         end
+        old_rec.print_diff(rec)
         new_path = rec.make_path(@itinerary.entries_path)
         if new_path != rec.path
           old_path = rec.path
