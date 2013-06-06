@@ -75,7 +75,7 @@ class Itinerary
   def setup_geocoding_cache
     @geocoding_cache = Daybreak::DB.new(@geocoding_cache_path)
     @geocoding_cache.compact
-    Geocoder.configure(:cache => @geocoding_cache)
+    Geocoder.configure(:cache => @geocoding_cache, :timeout => 30)
   end
 
   def geocode_search(place)
