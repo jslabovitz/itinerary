@@ -1,3 +1,9 @@
+  - try Github map rendering
+    	https://github.com/blog/1528-there-s-a-map-for-that
+
+  - try Mavericks MapKit
+      https://developer.apple.com/library/mac/documentation/MapKit/Reference/MapKit_Framework_Reference/_index.html#//apple_ref/doc/uid/TP40008210
+
   - implement coordinate fuzzing
 
   - read all records at Itinerary instantiation
@@ -5,7 +11,6 @@
     - rebuild cache if new/deleted files, or files have changed
 
   - expand routing
-    - multiple routes
     - travel mode for each leg
     - date for each node
 

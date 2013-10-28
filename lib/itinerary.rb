@@ -6,9 +6,11 @@ require 'hashstruct'
 require 'haversine'
 require 'builder'
 require 'daybreak'
+require 'yaml'
 
 require 'itinerary/version'
 require 'itinerary/record'
+require 'itinerary/route'
 require 'itinerary/view'
 require 'itinerary/views/html'
 require 'itinerary/views/kml'
@@ -22,7 +24,7 @@ class Itinerary
 
   attr_accessor :name
   attr_accessor :root
-  attr_accessor :route
+  attr_accessor :routes
 
   def initialize(options={})
     @name = options[:name]
@@ -31,6 +33,7 @@ class Itinerary
     @geocoding_cache_path = @root + (options[:geocoding_cache] || '.geocoding-cache')
     setup_geocoding_cache
     @entries = []
+    @routes = []
     read_entries
     read_routes
   end
@@ -43,8 +46,8 @@ class Itinerary
     @root + 'entries'
   end
 
-  def route_path
-    @root + 'route'
+  def routes_path
+    @root + 'routes.yaml'
   end
 
   def read_entries
@@ -65,21 +68,26 @@ class Itinerary
   end
 
   def read_routes
-    ;;warn "[initialize] reading route from #{route_path}"
-    if route_path.exist?
-      @route = route_path.readlines.map { |p| geocode_search(p) }
+    ;;warn "[initialize] reading routes from #{routes_path}"
+    if routes_path.exist?
+      @routes = YAML.load(routes_path.read).map do |name, info|
+        dates = info['start'] .. info['end']
+        points = info['points'].map { |p| geocode_search(p) }
+        Route.new(name: name, dates: dates, points: points)
+      end
     end
-    ;;warn "[initialize] read #{@route.length} legs of route"
+    ;;warn "[initialize] read #{@routes.length} routes"
   end
 
   def setup_geocoding_cache
     @geocoding_cache = Daybreak::DB.new(@geocoding_cache_path)
     @geocoding_cache.compact
-    Geocoder.configure(:cache => @geocoding_cache, :timeout => 30)
+    Geocoder.configure(:cache => @geocoding_cache, :timeout => 5 * 60)
   end
 
   def geocode_search(place)
     begin
+      # ;;warn "Geocoding place #{place.inspect}..."
       results = Geocoder.search(place)
       @geocoding_cache.flush
       result = results.first or raise "No geocoding result for place #{place.inspect}"
@@ -156,12 +164,14 @@ class Itinerary
     matches
   end
 
-  def find(query)
-    @entries.find { |r| r.match(query, self) }
+  def find(query=nil, &block)
+    block ||= proc { |r| r.match(query, self) }
+    @entries.find(&block)
   end
 
-  def select(query)
-    @entries.select { |r| r.match(query, self) }
+  def select(query=nil, &block)
+    block ||= proc { |r| r.match(query, self) }
+    @entries.select(&block)
   end
 
   def [](query)

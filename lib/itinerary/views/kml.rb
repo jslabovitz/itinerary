@@ -9,10 +9,16 @@ class Itinerary
           @kml.Document do
             @kml.name(@name)
             super
-            render_route if @itinerary.route
+            render_routes
           end
         end
         @kml.target!
+      end
+
+      def render_routes
+        @itinerary.routes.each do |route|
+          render_route(route)
+        end
       end
 
       # draw points for entries
@@ -32,13 +38,13 @@ class Itinerary
 
       # draw lines for legs of route
 
-      def render_route
-        @kml.Placemark(:id => 'route') do
+      def render_route(route)
+        @kml.Placemark(:id => route.name) do
           @kml.LineString do
             @kml.extrude(1)
             @kml.tessellate(1)
             @kml.coordinates do
-              @kml << @itinerary.route.map { |leg| [leg.longitude, leg.latitude].join(',') }.join("\n")
+              @kml << route.points.map { |p| [p.longitude, p.latitude].join(',') }.join("\n")
             end
           end
         end
