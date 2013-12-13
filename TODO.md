@@ -5,6 +5,7 @@
       https://developer.apple.com/library/mac/documentation/MapKit/Reference/MapKit_Framework_Reference/_index.html#//apple_ref/doc/uid/TP40008210
 
   - implement coordinate fuzzing
+    - use new 'Geocoder::Calculations.random_point_near' method
 
   - read all records at Itinerary instantiation
     - cache (using Marshal)
