@@ -25,8 +25,6 @@ Gem::Specification.new do |gem|
 
   gem.add_runtime_dependency 'builder'
   gem.add_runtime_dependency 'daybreak'
-  gem.add_runtime_dependency 'faraday'
-  gem.add_runtime_dependency 'faraday_middleware'
   gem.add_runtime_dependency 'geocoder'
   gem.add_runtime_dependency 'hashstruct'
   gem.add_runtime_dependency 'haversine'
