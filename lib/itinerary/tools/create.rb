@@ -27,7 +27,7 @@ class Itinerary
         warn "Failed to geocode #{rec.address.inspect} (entry left in #{tmp})"
         exit(1)
       end
-      rec.path = rec.make_path(@itinerary.entries_path)
+      rec.make_path(@itinerary.entries_path)
       rec.save!
       warn "Saved to #{rec.path}"
       tmp.unlink

@@ -16,7 +16,6 @@ require 'itinerary/views/html'
 require 'itinerary/views/kml'
 require 'itinerary/views/tab'
 require 'itinerary/views/text'
-# require 'itinerary/briar_scraper'
 
 class Itinerary
 

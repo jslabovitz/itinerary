@@ -14,7 +14,6 @@ require 'itinerary/tools/import'
 require 'itinerary/tools/list'
 require 'itinerary/tools/report'
 require 'itinerary/tools/routes'
-require 'itinerary/tools/scrape-briar'
 
 root = nil
 

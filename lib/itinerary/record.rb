@@ -196,13 +196,14 @@ class Itinerary
     end
 
     def make_path(root)
-      path = root.dup
+      @path = Pathname.new(root.dup)
       raise "Not geocoded" unless geocoded?
-      path += string_to_key(country) if country
-      path += string_to_key(state) if state
+      @path += string_to_key(country) if country
+      @path += string_to_key(state) if state
       raise "Can't make key from empty name" unless name
-      path += string_to_key(name)
-      path
+      @path += string_to_key(name)
+      @path = Pathname.new(@path.to_s + '.md')
+      @path
     end
 
     def clean!
@@ -310,8 +311,9 @@ class Itinerary
       fields_html
     end
 
-    def save!
+    def save!(force: force=false)
       raise "Record has no path" unless @path
+      raise "Path #{@path} exists" if @path.exist? && !force
       @path.dirname.mkpath unless @path.dirname.exist?
       @path.open('w') { |io| io.write(to_text) }
     end
