@@ -166,6 +166,10 @@ class Itinerary
       !visited.nil? && visited >= DateTime.now
     end
 
+    def unvisited?
+      visited.nil?
+    end
+
     def contacted?
       !contacted.nil?
     end
