@@ -1,5 +1,5 @@
 class Itinerary
 
-  VERSION = '0.6'
+  VERSION = '0.7'
 
 end
