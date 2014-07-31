@@ -164,7 +164,7 @@ class Itinerary
     end
 
     def visit?
-      rank > 3
+      rank && rank > 3
     end
 
     def unvisited?
