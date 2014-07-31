@@ -306,9 +306,9 @@ class Itinerary
           when URI
             html.a(value.to_s, :href => value.to_s)
           when Builder::XmlMarkup
-            html << value
+            html << value.to_s
           else
-            html.text!(value)
+            html.text!(value.to_s)
           end
           fields_html[display_name] = html.target!
         end
