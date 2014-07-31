@@ -48,6 +48,7 @@ class Itinerary
     define_field :description, type: String, name: 'Description'
     define_field :ref, type: String, name: 'Reference'
     define_field :group, type: String, name: 'Group'
+    define_field :visit, type: Object, name: 'Visit'
     define_field :visited, type: Date, name: 'Visited'
     define_field :contacted, type: Date, name: 'Contacted'
     define_field :declined, type: Date, name: 'Declined'
@@ -162,8 +163,8 @@ class Itinerary
       !visited.nil? && visited < DateTime.now
     end
 
-    def to_visit?
-      !visited.nil? && visited >= DateTime.now
+    def visit?
+      !!visit
     end
 
     def unvisited?
